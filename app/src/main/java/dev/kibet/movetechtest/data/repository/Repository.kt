@@ -1,9 +1,10 @@
 package dev.kibet.movetechtest.data.repository
 
 import dev.kibet.movetechtest.data.api.MoveSmsApi
-import dev.kibet.movetechtest.data.request.Response
 import dev.kibet.movetechtest.data.request.SendSms
 import dev.kibet.movetechtest.others.Resource
+import okhttp3.ResponseBody
+import retrofit2.HttpException
 import javax.inject.Inject
 
 class Repository @Inject constructor(private val moveSmsApi: MoveSmsApi) {
@@ -16,7 +17,7 @@ class Repository @Inject constructor(private val moveSmsApi: MoveSmsApi) {
         message: String,
         msgtype: String,
         dlr: String
-    ): Resource<Response> {
+    ): Resource<ResponseBody> {
 
         return try {
             val response = moveSmsApi.sendSMS(
@@ -32,17 +33,14 @@ class Repository @Inject constructor(private val moveSmsApi: MoveSmsApi) {
             )
             Resource.success(response)
         } catch (e: Exception) {
-            Resource(e.message.toString(), null, "Nothing")
+            return if (e is HttpException) {
+                Resource.error(e.message(), null)
+            } else {
+                Resource.error(
+                    "Couldn't connect to the servers. Check your internet connection",
+                    null
+                )
+            }
         }
-
-        //{
-        // return if (e is HttpException) {
-        //Resource.error(e.message(), null)
-        //} else {
-        //Resource.error(
-        //"Couldn't connect to the servers. Check your internet connection,
-        //  null
-        //)
     }
-
 }
